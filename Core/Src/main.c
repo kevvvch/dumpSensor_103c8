@@ -22,6 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "dumpSensorManager.h"
+#include "softTimer.h"
 
 /* USER CODE END Includes */
 
@@ -67,6 +69,10 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	softTimer_periodElapsedCallback(htim);
+}
 
 /* USER CODE END 0 */
 
@@ -109,8 +115,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  dumpSensorManager_init();
+
   while (1)
   {
+	  dumpSensorManager_handler();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

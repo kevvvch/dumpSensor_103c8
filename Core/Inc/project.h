@@ -1,0 +1,39 @@
+/*
+ * project.h
+ *
+ *  Created on: Nov 29, 2022
+ *      Author: kevin
+ */
+
+#ifndef INC_PROJECT_H_
+#define INC_PROJECT_H_
+
+//#define STATUS_LED
+
+#define PROJECT_NOLOGIC
+
+#define DUMPSTER_DISTANCE_MAX				1800
+#define DUMPSTER_DISTANCE_PERC_TRIG_POS		75		//
+#define DUMPSTER_DISTANCE_PERC_TRIG_NEG		60
+
+
+#define DUMPSTER_BATTERY_PERC_TRIG_POS		40
+#define DUMPSTER_BATTERY_PERC_TRIG_NEG		25
+
+
+#define NVM_ID_LOW			NVM_REGISTER1
+#define NVM_ID_HIGH			NVM_REGISTER2
+#define NVM_COUNTER_DAY		NVM_REGISTER3
+#define NVM_FLAGS0			NVM_REGISTER4
+/*
+#define NVM_REGISTER5
+#define NVM_REGISTER6
+#define NVM_REGISTER7
+#define NVM_REGISTER8
+#define NVM_REGISTER9
+#define NVM_REGISTER10
+*/
+
+
+
+#endif /* INC_PROJECT_H_ */

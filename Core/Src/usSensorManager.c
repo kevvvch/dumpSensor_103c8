@@ -389,7 +389,7 @@ void usSensor_setCallback(void (*cb)(_usSensor_event, void*))
 
 static void pinUsVdd_write(uint8_t state)
 {
-	//HAL_GPIO_WritePin(, , state);
+	HAL_GPIO_WritePin(US_SENSOR_VDD_PORT, US_SENSOR_VDD_PIN, state);
 }
 
 static void pinUsTrigger_write(uint8_t state)

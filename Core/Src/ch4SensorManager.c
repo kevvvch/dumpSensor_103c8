@@ -198,6 +198,6 @@ static void ch4_adcStop(void)
 
 static void pinCh4Vdd_write(uint8_t state)
 {
-	//HAL_GPIO_WritePin(, , state);
+	HAL_GPIO_WritePin(CH4_SENSOR_VDD_PORT, CH4_SENSOR_VDD_PIN, state);
 }
 

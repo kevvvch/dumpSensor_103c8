@@ -28,4 +28,10 @@ void ch4Sensor_powerOff(void);
 
 
 
+
+//Pin Management
+#define CH4_SENSOR_VDD_PORT			CH4_VDD_GPIO_Port
+#define CH4_SENSOR_VDD_PIN			CH4_VDD_Pin
+
+
 #endif /* INC_CH4SENSORMANAGER_H_ */

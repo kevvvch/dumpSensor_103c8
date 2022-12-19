@@ -27,5 +27,9 @@ void nh3Sensor_powerOn(void);
 void nh3Sensor_powerOff(void);
 
 
+//Pin Management
+#define NH3_SENSOR_VDD_PORT			NH3_VDD_GPIO_Port
+#define NH3_SENSOR_VDD_PIN			NH3_VDD_Pin
+
 
 #endif /* INC_NH3SENSORMANAGER_H_ */

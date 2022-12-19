@@ -2087,7 +2087,7 @@ static void handle_requestServerDisconnection(void)
 
 static void pinGsmVdd_write(uint8_t value)
 {
-	//HAL_GPIO_WritePin(GSM_VDD_GPIO_Port, GSM_VDD_Pin, value);
+	HAL_GPIO_WritePin(GSM_VDD_GPIO_Port, GSM_VDD_Pin, value);
 }
 
 static void pinGsmPwrkey_write(uint8_t value)

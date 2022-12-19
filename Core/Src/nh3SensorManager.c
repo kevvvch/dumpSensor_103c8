@@ -200,5 +200,5 @@ static void nh3_adcStop(void)
 
 static void pinNh3Vdd_write(uint8_t state)
 {
-	//HAL_GPIO_WritePin(, , state);
+	HAL_GPIO_WritePin(NH3_SENSOR_VDD_PORT, NH3_SENSOR_VDD_PIN, state);
 }

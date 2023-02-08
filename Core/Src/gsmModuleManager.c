@@ -158,6 +158,9 @@ typedef enum {
 	__gsmModule_requestServerConnection_waitOk_atCband,
 	__gsmModule_requestServerConnection_send_atCreg1,
 	__gsmModule_requestServerConnection_check_atCreg1,
+	__gsmModule_requestServerConnection_waitOk_atCreg1,
+	__gsmModule_requestServerConnection_send_atCreg,
+	__gsmModule_requestServerConnection_check_atCreg,
 	__gsmModule_requestServerConnection_send_atCops,
 	__gsmModule_requestServerConnection_get_atCops,
 	__gsmModule_requestServerConnection_send_atSapbr3_contype,
@@ -1219,7 +1222,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 3000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1241,7 +1244,6 @@ static void handle_requestServerConnection(void)
 				softTimer_start(&timeout, 10*1000);
 			}
 
-
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCfun1);
 			}
@@ -1260,7 +1262,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 3000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1360,7 +1362,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 5000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1381,12 +1383,13 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
 				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_creg1);
-				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCreg1);
+				//fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCreg1);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atCreg1);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1395,12 +1398,12 @@ static void handle_requestServerConnection(void)
 			break;
 
 
-
+/*
 		case __gsmModule_requestServerConnection_check_atCreg1:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 10*1000);
+				softTimer_start(&timeout, 20*1000);
 			}
 
 			if(flags_gsmModuleUnsolicited.bits.creg1) {
@@ -1424,7 +1427,71 @@ static void handle_requestServerConnection(void)
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
 			}
 			break;
+*/
 
+
+		case __gsmModule_requestServerConnection_waitOk_atCreg1:
+			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
+				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 2*1000);
+			}
+
+			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg);
+			}
+			else if(softTimer_expired(&timeout)) {
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg1);
+			}
+
+			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
+				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
+			}
+			break;
+
+
+
+		case __gsmModule_requestServerConnection_send_atCreg:
+			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
+				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 2*1000);
+			}
+
+
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_creg);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCreg);
+			}
+
+			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
+				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
+			}
+			break;
+
+
+
+		case __gsmModule_requestServerConnection_check_atCreg:
+			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
+				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 5*1000);
+			}
+
+			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_creg1_1, gsmRxDataChunkLen)) {
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCops);
+			}
+			else if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_creg1_2, gsmRxDataChunkLen)) {
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg1);
+			}
+			else if(softTimer_expired(&timeout)) {
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg);
+			}
+
+			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
+				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
+			}
+			break;
 
 
 
@@ -1432,7 +1499,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 3*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1486,7 +1553,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1*1000);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1505,7 +1572,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 1*1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1527,7 +1594,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1548,7 +1615,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1570,7 +1637,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1592,7 +1659,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1614,7 +1681,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1635,7 +1702,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 3*1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1697,7 +1764,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 1*1000);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1716,7 +1783,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 1000);
 			}
 
 			if(!string_containsWithinLength(gsmRxDataChunk, (uint8_t *) "0.0.0.0", gsmRxDataChunkLen)) {
@@ -1796,7 +1863,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 2*1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1867,7 +1934,7 @@ static void handle_requestServerDataSend(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDataSend_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 3*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1884,7 +1951,7 @@ static void handle_requestServerDataSend(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDataSend_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 5*1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
@@ -1903,7 +1970,7 @@ static void handle_requestServerDataSend(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDataSend_state);
 
-				softTimer_start(&timeout, 1000);
+				softTimer_start(&timeout, 3*1000);
 			}
 
 			if(softTimer_expired(&timeout)) {

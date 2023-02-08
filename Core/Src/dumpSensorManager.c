@@ -408,7 +408,11 @@ void dumpSensorManager_handler(void)
 			}
 
 			if(flags_dumpSensor.bits.ch4Sensor_measureDone == 1) {
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_getGps);
+				//TODO: Descomentar
+				//fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_getGps);
+
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
+
 			}
 			else if(softTimer_expired(&timer)) {
 				//If there is not a measurement within 500 mseg, stop trying to measure
@@ -487,7 +491,7 @@ void dumpSensorManager_handler(void)
 					string_appendChar(payloadDataToSend, '"');
 				}
 
-				softTimer_start(&timer, 2*60*1000);
+				softTimer_start(&timer, 10*60*1000);
 			}
 
 

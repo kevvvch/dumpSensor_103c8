@@ -20,6 +20,7 @@ const uint8_t gsmModule_command_cfun1[] 				= "AT+CFUN=1\r\n";
 const uint8_t gsmModule_command_cpin[] 					= "AT+CPIN?\r\n";
 const uint8_t gsmModule_command_cband_allBand[]			= "AT+CBAND=\"ALL_BAND\"\r\n";
 const uint8_t gsmModule_command_creg1[]					= "AT+CREG=1\r\n";
+const uint8_t gsmModule_command_creg[]					= "AT+CREG?\r\n";
 const uint8_t gsmModule_command_sapbr3contype[] 		= "AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n";
 const uint8_t gsmModule_command_sapbr3apnPersonal[] 	= "AT+SAPBR=3,1,\"APN\",\"gprs.personal.com\"\r\n";
 const uint8_t gsmModule_command_sapbr3userPersonal[] 	= "AT+SAPBR=3,1,\"USER\",\"gprs\"\r\n";

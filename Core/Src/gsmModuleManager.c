@@ -772,14 +772,14 @@ static void handle_requestGpsOn(void)
 			if(fsmManager_isStateIn(&gsmModule_requestGpsOn_state)) {
 				fsmManager_stateIn(&gsmModule_requestGpsOn_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
 				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_send_atCgpsrst0);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_error);
+				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_send_atCgpspwr1);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOn_state)) {
@@ -792,10 +792,14 @@ static void handle_requestGpsOn(void)
 		case __gsmModule_requestGpsOn_send_atCgpsrst0:
 			if(fsmManager_isStateIn(&gsmModule_requestGpsOn_state)) {
 				fsmManager_stateIn(&gsmModule_requestGpsOn_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsrst0);
-			fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_waitOk_atCgpsrst0);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsrst0);
+				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_waitOk_atCgpsrst0);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOn_state)) {
 				fsmManager_stateOut(&gsmModule_requestGpsOn_state);
@@ -818,7 +822,7 @@ static void handle_requestGpsOn(void)
 				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_idle);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_error);
+				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestGpsOn_send_atCgpsrst0);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOn_state)) {
@@ -1008,10 +1012,14 @@ static void handle_requestGpsOff(void)
 		case __gsmModule_requestGpsOff_send_atCgpsrst0:
 			if(fsmManager_isStateIn(&gsmModule_requestGpsOff_state)) {
 				fsmManager_stateIn(&gsmModule_requestGpsOff_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsrst0);
-			fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_waitOk_atCgpsrst0);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsrst0);
+				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_waitOk_atCgpsrst0);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
 				fsmManager_stateOut(&gsmModule_requestGpsOff_state);
@@ -1031,7 +1039,7 @@ static void handle_requestGpsOff(void)
 				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_send_atCgpsrst1);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_error);
+				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_send_atCgpsrst0);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
@@ -1044,10 +1052,14 @@ static void handle_requestGpsOff(void)
 		case __gsmModule_requestGpsOff_send_atCgpsrst1:
 			if(fsmManager_isStateIn(&gsmModule_requestGpsOff_state)) {
 				fsmManager_stateIn(&gsmModule_requestGpsOff_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsrst1);
-			fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_waitOk_atCgpsrst1);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsrst1);
+				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_waitOk_atCgpsrst1);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
 				fsmManager_stateOut(&gsmModule_requestGpsOff_state);
@@ -1067,7 +1079,7 @@ static void handle_requestGpsOff(void)
 				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_send_atCgpspwr0);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_error);
+				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_send_atCgpsrst1);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
@@ -1080,10 +1092,14 @@ static void handle_requestGpsOff(void)
 		case __gsmModule_requestGpsOff_send_atCgpspwr0:
 			if(fsmManager_isStateIn(&gsmModule_requestGpsOff_state)) {
 				fsmManager_stateIn(&gsmModule_requestGpsOff_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpspwr1);
-			fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_waitOk_atCgpspwr0);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpspwr1);
+				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_waitOk_atCgpspwr0);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
 				fsmManager_stateOut(&gsmModule_requestGpsOff_state);
@@ -1105,7 +1121,7 @@ static void handle_requestGpsOff(void)
 				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_idle);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_error);
+				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_send_atCgpspwr0);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
@@ -1202,10 +1218,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atCfun0:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cfun0);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atCfun0);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cfun0);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atCfun0);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1226,7 +1246,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCfun1);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCfun0);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1239,10 +1259,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atCfun1:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cfun1);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atCfun1);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cfun1);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atCfun1);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1262,7 +1286,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCpin);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCfun1);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1275,10 +1299,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atCpin:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 500);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cpin);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCpin);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cpin);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCpin);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1298,7 +1326,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCband);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCpin);
 			}
 
 
@@ -1332,14 +1360,14 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100);
+				softTimer_start(&timeout, 1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg1);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCband);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1352,10 +1380,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atCreg1:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_creg1);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCreg1);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_creg1);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atCreg1);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1368,7 +1400,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 100*1000);
+				softTimer_start(&timeout, 10*1000);
 			}
 
 			if(flags_gsmModuleUnsolicited.bits.creg1) {
@@ -1382,9 +1414,9 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg1);
 			}
 			else if(softTimer_expired(&timeout) || flags_gsmModuleUnsolicited.bits.creg0) {
-				flags_gsmModuleUnsolicited.bits.creg0 = 1;
+				flags_gsmModuleUnsolicited.bits.creg0 = 0;
 
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCreg1);
 			}
 
 
@@ -1399,10 +1431,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atCops:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cops);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_get_atCops);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cops);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_get_atCops);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1436,7 +1472,7 @@ static void handle_requestServerConnection(void)
 			else if(softTimer_expired(&timeout)) {
 				gsmModule_operator = __gsmModule_operator_unknown;
 
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCops);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1476,7 +1512,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_apn);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_contype);
 			}
 
 
@@ -1490,13 +1526,16 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atSapbr3_apn:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			if(gsmModule_operator == __gsmModule_operator_personal) {
-				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr3apnPersonal);
+			if(softTimer_expired(&timeout)) {
+				if(gsmModule_operator == __gsmModule_operator_personal) {
+					pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr3apnPersonal);
+					fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atSapbr3_apn);
+				}
 			}
-
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atSapbr3_apn);
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1516,7 +1555,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_user);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_apn);
 			}
 
 
@@ -1530,13 +1569,17 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atSapbr3_user:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			if(gsmModule_operator == __gsmModule_operator_personal) {
-				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr3userPersonal);
+			if(softTimer_expired(&timeout)) {
+				if(gsmModule_operator == __gsmModule_operator_personal) {
+					pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr3userPersonal);
+					fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atSapbr3_user);
+				}
 			}
 
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atSapbr3_user);
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1556,7 +1599,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_pwd);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_user);
 			}
 
 
@@ -1570,13 +1613,16 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atSapbr3_pwd:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			if(gsmModule_operator == __gsmModule_operator_personal) {
-				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr3pwdPersonal);
+			if(softTimer_expired(&timeout)) {
+				if(gsmModule_operator == __gsmModule_operator_personal) {
+					pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr3pwdPersonal);
+					fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atSapbr3_pwd);
+				}
 			}
-
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atSapbr3_pwd);
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1596,7 +1642,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr1);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr3_pwd);
 			}
 
 
@@ -1630,14 +1676,14 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 85*1000);
+				softTimer_start(&timeout, 20*1000);
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr2);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr1);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1650,10 +1696,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atSapbr2:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1*1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr2);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atSapbr2);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr2);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_check_atSapbr2);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1673,7 +1723,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atHttpinit);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atSapbr2);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1713,7 +1763,7 @@ static void handle_requestServerConnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atHttppara_cid);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atHttpinit);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1726,10 +1776,14 @@ static void handle_requestServerConnection(void)
 		case __gsmModule_requestServerConnection_send_atHttppara_cid:
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
+
+				softTimer_start(&timeout, 1*1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_httppara_cid);
-			fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atHttppara_cid);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_httppara_cid);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_waitOk_atHttppara_cid);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerConnection_state);
@@ -1752,7 +1806,7 @@ static void handle_requestServerConnection(void)
 				flags_gsmModule.bits.requestServerConnection = 0;
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestGpsOn_state, __gsmModule_requestServerConnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atHttppara_cid);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerConnection_state)) {
@@ -1812,12 +1866,14 @@ static void handle_requestServerDataSend(void)
 		case __gsmModule_requestServerDataSend_send_atHttppara_url:
 			if(fsmManager_isStateIn(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDataSend_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-
-
-			pinGsmUartTx_transmit((uint8_t *) dataToSend);
-			fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_waitOk_atHttppara_url);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) dataToSend);
+				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_waitOk_atHttppara_url);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerDataSend_state);
@@ -1835,7 +1891,7 @@ static void handle_requestServerDataSend(void)
 				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_send_atHttpaction1);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_error);
+				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_send_atHttppara_url);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDataSend_state)) {
@@ -1846,10 +1902,14 @@ static void handle_requestServerDataSend(void)
 		case __gsmModule_requestServerDataSend_send_atHttpaction1:
 			if(fsmManager_isStateIn(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDataSend_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_httpaction1);
-			fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_waitOk_atHttpaction1);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_httpaction1);
+				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_waitOk_atHttpaction1);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDataSend_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerDataSend_state);
@@ -1873,7 +1933,7 @@ static void handle_requestServerDataSend(void)
 				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_error);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_error);
+				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_waitOk_atHttpaction1);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDataSend_state)) {
@@ -1930,10 +1990,14 @@ static void handle_requestServerDisconnection(void)
 		case __gsmModule_requestServerDisconnection_send_atHttpterm:
 			if(fsmManager_isStateIn(&gsmModule_requestServerDisconnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDisconnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_httpterm);
-			fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_waitOk_atHttpterm);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_httpterm);
+				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_waitOk_atHttpterm);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerDisconnection_state);
@@ -1953,7 +2017,7 @@ static void handle_requestServerDisconnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_send_atSapbr0);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_send_atHttpterm);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {
@@ -1966,10 +2030,14 @@ static void handle_requestServerDisconnection(void)
 		case __gsmModule_requestServerDisconnection_send_atSapbr0:
 			if(fsmManager_isStateIn(&gsmModule_requestServerDisconnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDisconnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr0);
-			fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_waitOk_atSapbr0);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr0);
+				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_waitOk_atSapbr0);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerDisconnection_state);
@@ -1989,7 +2057,7 @@ static void handle_requestServerDisconnection(void)
 				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_send_atSapbr2);
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_send_atSapbr0);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {
@@ -2002,10 +2070,14 @@ static void handle_requestServerDisconnection(void)
 		case __gsmModule_requestServerDisconnection_send_atSapbr2:
 			if(fsmManager_isStateIn(&gsmModule_requestServerDisconnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerDisconnection_state);
+
+				softTimer_start(&timeout, 1000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr2);
-			fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_check_atSapbr2);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_sapbr2);
+				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_check_atSapbr2);
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {
 				fsmManager_stateOut(&gsmModule_requestServerDisconnection_state);
@@ -2028,7 +2100,7 @@ static void handle_requestServerDisconnection(void)
 				flags_gsmModule.bits.requestServerDisconnection = 0;
 			}
 			else if(softTimer_expired(&timeout)) {
-				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_error);
+				fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_send_atSapbr2);
 			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {

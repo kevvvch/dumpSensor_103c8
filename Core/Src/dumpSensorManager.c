@@ -7,7 +7,7 @@
 
 #include "fsmManager.h"
 #include "dumpSensorManager.h"
-//#include "powerModeManager.h"
+#include "powerModeManager.h"
 #include "softTimer.h"
 #include "usSensorManager.h"
 #include "nh3SensorManager.h"
@@ -169,7 +169,7 @@ void tempSensorCb(_tempSensor_event evt, void* payload)
 void dumpSensorManager_init(void)
 {
 	//Wakes up from sleep
-	//powerMode_init(&hrtc);
+	powerMode_init(&hrtc);
 
 	//Initializes softTimer
 	softTimer_init(&htim4);
@@ -177,6 +177,7 @@ void dumpSensorManager_init(void)
 	//Initializes ultrasonic Sensor
 	usSensor_init(&htim3);
 	usSensor_setCallback(usSensorCb);
+	usSensor_powerOff();
 
 	//Initializes temperature Sensor
 	tempSensor_init(&hadc1);
@@ -185,13 +186,16 @@ void dumpSensorManager_init(void)
 	//Initializes NH3 Sensor
 	nh3Sensor_init(&hadc1);
 	nh3Sensor_setCallback(nh3SensorCb);
+	nh3Sensor_powerOff();
 
 	//Initializes CH4 Sensor
 	ch4Sensor_init(&hadc1);
 	ch4Sensor_setCallback(ch4SensorCb);
+	ch4Sensor_powerOff();
 
 	//Initializes GSM Module
 	gsmModule_init(&huart1);
+	gsmModule_powerOff();
 
 	//Initializes NVM managment Module
 	nvm_init(&hrtc);
@@ -294,7 +298,10 @@ void dumpSensorManager_handler(void)
 			}
 
 			if(flags_dumpSensor.bits.tempSensor_measureDone == 1) {
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_measureLevel);
+				//TODO: quitar este comentario
+				//fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_measureLevel);
+				flags_dumpSensor.bits.gsmModule_turnOn = 1;
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_heatGasSensor);
 			}
 
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
@@ -316,7 +323,6 @@ void dumpSensorManager_handler(void)
 				//Calculates the percentage of the level of the dumpster
 				distancePercent = calculateDistancePercentage(distance);
 #if defined PROJECT_NOLOGIC
-				flags_dumpSensor.bits.gsmModule_turnOn = 1;
 				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_heatGasSensor);
 
 #else
@@ -351,8 +357,8 @@ void dumpSensorManager_handler(void)
 			if(fsmManager_isStateIn(&dumpSensorFsmState)) {
 				fsmManager_stateIn(&dumpSensorFsmState);
 
-				nh3Sensor_powerOn();
 				ch4Sensor_powerOn();
+				nh3Sensor_powerOn();
 
 				softTimer_start(&timer, 6*1000);
 			}
@@ -363,8 +369,6 @@ void dumpSensorManager_handler(void)
 
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
 				fsmManager_stateOut(&dumpSensorFsmState);
-
-				usSensor_powerOff();
 			}
 			break;
 
@@ -442,7 +446,6 @@ void dumpSensorManager_handler(void)
 				fsmManager_stateOut(&dumpSensorFsmState);
 
 				gsmModule_gpsOff();
-				gsmModule_serverConnect();
 			}
 			break;
 
@@ -451,6 +454,8 @@ void dumpSensorManager_handler(void)
 		case __dumpSensor_sendPackage:
 			if(fsmManager_isStateIn(&dumpSensorFsmState)) {
 				fsmManager_stateIn(&dumpSensorFsmState);
+
+				gsmModule_serverConnect();
 
 				payloadDataToSend[0] = '\0';
 				string_appendString(payloadDataToSend, (uint8_t *) "id=");
@@ -556,7 +561,7 @@ void dumpSensorManager_handler(void)
 			}
 
 			//Enters standby mode
-			//powerMode_enterStandbyMode(1*3);
+			powerMode_enterStandbyMode(1*10);
 
 			fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_idle);
 

@@ -78,7 +78,7 @@ void Error_Handler(void);
 #define GSM_TX_GPIO_Port GPIOA
 #define GSM_PWRKEY_Pin GPIO_PIN_3
 #define GSM_PWRKEY_GPIO_Port GPIOB
-#define GSM_VDD_Pin GPIO_PIN_5
+#define GSM_VDD_Pin GPIO_PIN_6
 #define GSM_VDD_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 

@@ -93,9 +93,9 @@ static _flags_usSensor flags_usSensor;
 static _flags_usSensorError flags_usSensorError;
 
 //Input capture
-static uint32_t icVal1, icVal2, icDif;
+volatile static uint32_t icVal1, icVal2, icDif;
 static float mFactor;
-static float echoTime;			//Echo pulse time [useg]
+volatile static float echoTime;			//Echo pulse time [useg]
 
 //Variables
 static float usDistance;		//Distance between sensor and obstacle [mm]
@@ -414,6 +414,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			flags_usSensor.bits.isFirstCaptured = 1;
 
 			icVal1 = HAL_TIM_ReadCapturedValue(usHtim, US_SENSOR_ECHO_TIM_CHANNEL);
+			__HAL_TIM_SET_CAPTUREPOLARITY(usHtim, US_SENSOR_ECHO_TIM_CHANNEL, TIM_INPUTCHANNELPOLARITY_FALLING);
 		} else {
 			flags_usSensor.bits.isFirstCaptured = 0;
 
@@ -421,12 +422,13 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			icVal2 = HAL_TIM_ReadCapturedValue(usHtim, US_SENSOR_ECHO_TIM_CHANNEL);
 			__HAL_TIM_SET_COUNTER(usHtim, 0);
 			if(icVal2 > icVal1) icDif = icVal2-icVal1;
-			if(icVal1 > icVal2) icDif = (0xffffffff-icVal1)+icVal2;
+			if(icVal1 > icVal2) icDif = (0xffff-icVal1)+icVal2;
 
 			//Get echo time
 			echoTime = icDif*mFactor;
 
 			flags_usSensor.bits.receivedEcho = 1;
+			__HAL_TIM_SET_CAPTUREPOLARITY(usHtim, US_SENSOR_ECHO_TIM_CHANNEL, TIM_INPUTCHANNELPOLARITY_RISING);
 		}
 	}
 }

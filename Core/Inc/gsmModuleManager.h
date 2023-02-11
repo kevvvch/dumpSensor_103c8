@@ -13,6 +13,10 @@
 
 
 
+/*CALLBACK EVENTS*/
+typedef enum {
+	__gsmModuleEvent_okGpsInfo = 0
+} _gsmModule_event;
 
 
 /* PUBLIC FUNCTIONS */
@@ -20,6 +24,7 @@ void gsmModule_powerOn(void);
 void gsmModule_powerOff(void);
 void gsmModule_handler(void);
 void gsmModule_init(UART_HandleTypeDef *huart);
+void gsmModule_setCallback(void (*cb)(_gsmModule_event, void*));
 
 void gsmModule_pwrkeyOn(void);
 void gsmModule_pwrkeyOff(void);

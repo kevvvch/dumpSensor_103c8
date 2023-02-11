@@ -14,6 +14,7 @@
 //FSM
 typedef enum {
 	__usSensor_idle,
+	__usSensor_delay,
 	__usSensor_pinUsTrigger_write,
 	__usSensor_waitEcho,
 	__usSensor_getDistance,
@@ -131,7 +132,8 @@ void usSensor_init(TIM_HandleTypeDef *htim)
 	//Pin
 	pinUsVdd_write(0);
 	pinUsTrigger_write(0);
-	pinUsEcho_inputCaptureStop();
+	//pinUsEcho_inputCaptureStop();
+	//HAL_TIM_IC_Start_IT(usHtim, US_SENSOR_ECHO_TIM_CHANNEL);
 
 	//Flags
 	flags_usSensor.dword = 0;
@@ -169,6 +171,24 @@ void usSensor_handler(void)
 				flags_usSensor.bits.requestMeasure = 0;
 				flags_usSensor.bits.isMeasuring = 1;
 
+				fsmManager_gotoState(&usSensor_state,__usSensor_delay);
+			}
+
+			if(fsmManager_isStateOut(&usSensor_state)) {
+				fsmManager_stateOut(&usSensor_state);
+			}
+			break;
+
+
+
+		case __usSensor_delay:
+			if(fsmManager_isStateIn(&usSensor_state)) {
+				fsmManager_stateIn(&usSensor_state);
+
+				softTimer_start(&timer, 1000);
+			}
+
+			if(softTimer_expired(&timer)) {
 				fsmManager_gotoState(&usSensor_state,__usSensor_pinUsTrigger_write);
 			}
 
@@ -185,7 +205,7 @@ void usSensor_handler(void)
 
 				//Set trigger during 1 mseg
 				pinUsTrigger_write(1);
-				softTimer_start(&timer, 1);
+				softTimer_start(&timer, 10);
 			}
 
 			if(softTimer_expired(&timer)) {

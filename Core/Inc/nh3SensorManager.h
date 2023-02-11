@@ -17,6 +17,13 @@ typedef enum {
 
 
 
+#define NH3_R0		(float) 6.3	//KOhm
+#define NH3_RL		(float) 22		//KOhm
+
+#define NH3_COEF_A	(float) 1
+#define NH3_COEF_B	(float) 0.41
+#define NH3_COEF_C	(float) -0.41
+
 
 void nh3Sensor_init(ADC_HandleTypeDef *hadc);
 void nh3Sensor_handler(void);

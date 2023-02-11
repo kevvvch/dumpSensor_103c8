@@ -76,10 +76,12 @@ static float nh3Concentration;	//ppm
 static float ch4Concentration;	//ppm
 static float temperature;		//Celcius
 static float battery;			//Celcius
+static uint8_t gspLon[15];
+static uint8_t gspLat[15];
 
 static float distancePercent;
 static float batteryPercent;
-static uint8_t payloadDataToSend[100];	//Data to send to  server
+static uint8_t payloadDataToSend[150];	//Data to send to  server
 static uint8_t auxToSend[50];	//Auxiliar variable
 
 /* TIMERS */
@@ -96,6 +98,7 @@ typedef enum {
 	__dumpSensor_measureNh3,
 	__dumpSensor_measureCh4,
 	__dumpSensor_getGps,
+	__dumpSensor_turnOffGps,
 	__dumpSensor_sendPackage,
 	__dumpSensor_disconnectServer,
 	__dumpSensor_turnOffGsmModule,
@@ -165,6 +168,25 @@ void tempSensorCb(_tempSensor_event evt, void* payload)
 	}
 }
 
+void gsmModuleCb(_gsmModule_event evt, void* payload)
+{
+	switch(evt)
+	{
+		case __gsmModuleEvent_okGpsInfo:;
+			uint8_t *gspInfo = (uint8_t*) payload;
+			uint8_t strOut[10];
+
+			string_split(gspInfo, ',', strOut);
+			string_split(gspInfo, ',', strOut);
+			string_split(gspInfo, ',', gspLon);
+			string_split(gspInfo, ',', strOut);
+			string_split(gspInfo, ',', gspLat);
+
+			flags_dumpSensor.bits.tempSensor_measureDone = 1;
+			break;
+	}
+}
+
 
 void dumpSensorManager_init(void)
 {
@@ -196,6 +218,7 @@ void dumpSensorManager_init(void)
 	//Initializes GSM Module
 	gsmModule_init(&huart1);
 	gsmModule_powerOff();
+	gsmModule_setCallback(gsmModuleCb);
 
 	//Initializes NVM managment Module
 	nvm_init(&hrtc);
@@ -298,10 +321,8 @@ void dumpSensorManager_handler(void)
 			}
 
 			if(flags_dumpSensor.bits.tempSensor_measureDone == 1) {
-				//TODO: quitar este comentario
-				//fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_measureLevel);
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_measureLevel);
 				flags_dumpSensor.bits.gsmModule_turnOn = 1;
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_heatGasSensor);
 			}
 
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
@@ -408,11 +429,7 @@ void dumpSensorManager_handler(void)
 			}
 
 			if(flags_dumpSensor.bits.ch4Sensor_measureDone == 1) {
-				//TODO: Descomentar
-				//fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_getGps);
-
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
-
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_getGps);
 			}
 			else if(softTimer_expired(&timer)) {
 				//If there is not a measurement within 500 mseg, stop trying to measure
@@ -437,10 +454,10 @@ void dumpSensorManager_handler(void)
 			}
 
 			if(gsmModule_isGpsFixed()) {
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_turnOffGps);
 			}
 			else if(softTimer_expired(&timer)) {
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_turnOffGps);
 			}
 			else if(gsmModule_isPowered() && gsmModule_isGpsOn() && !gsmModule_isGpsFixed() && !gsmModule_requestedGpsInfo()) {
 				gsmModule_gpsInfo();
@@ -448,8 +465,28 @@ void dumpSensorManager_handler(void)
 
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
 				fsmManager_stateOut(&dumpSensorFsmState);
+			}
+			break;
+
+
+
+		case __dumpSensor_turnOffGps:
+			if(fsmManager_isStateIn(&dumpSensorFsmState)) {
+				fsmManager_stateIn(&dumpSensorFsmState);
 
 				gsmModule_gpsOff();
+				softTimer_start(&timer, 60*1000);
+			}
+
+			if(!gsmModule_isGpsOn()) {
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
+			}
+			else if(softTimer_expired(&timer)) {
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
+			}
+
+			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
+				fsmManager_stateOut(&dumpSensorFsmState);
 			}
 			break;
 
@@ -475,21 +512,31 @@ void dumpSensorManager_handler(void)
 				string_appendString(payloadDataToSend, (uint8_t *) "level=");
 				ascii_convertNum(auxToSend, (uint32_t) distancePercent);
 				string_appendString(payloadDataToSend, auxToSend);
-				string_appendChar(payloadDataToSend, '&');
 
 				if(flags_dumpSensor.bits.nh3Sensor_measureDone) {
+					string_appendChar(payloadDataToSend, '&');
 					string_appendString(payloadDataToSend, (uint8_t *) "nh3=");
 					ascii_convertNum(auxToSend, (uint32_t) nh3Concentration);
 					string_appendString(payloadDataToSend, auxToSend);
-					string_appendChar(payloadDataToSend, '&');
 				}
 
 				if(flags_dumpSensor.bits.ch4Sensor_measureDone) {
+					string_appendChar(payloadDataToSend, '&');
 					string_appendString(payloadDataToSend, (uint8_t *) "ch4=");
 					ascii_convertNum(auxToSend, (uint32_t) ch4Concentration);
 					string_appendString(payloadDataToSend, auxToSend);
-					string_appendChar(payloadDataToSend, '"');
 				}
+
+				if(gsmModule_isGpsFixed()) {
+					string_appendChar(payloadDataToSend, '&');
+					string_appendString(payloadDataToSend, (uint8_t *) "gpslon=");
+					string_appendString(payloadDataToSend, gspLon);
+
+					string_appendChar(payloadDataToSend, '&');
+					string_appendString(payloadDataToSend, (uint8_t *) "gpslat=");
+					string_appendString(payloadDataToSend, gspLat);
+				}
+				string_appendChar(payloadDataToSend, '"');
 
 				softTimer_start(&timer, 10*60*1000);
 			}

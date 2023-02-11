@@ -19,6 +19,7 @@ static volatile uint32_t gsmRxPtrOut;
 static uint32_t gsmRxDataChunkLen;
 
 static uint8_t dataToSend[200];
+static uint8_t gsmInfo[100];
 
 typedef enum {
 	__gsmModule_operator_unknown = 0,
@@ -78,8 +79,8 @@ typedef union {
 		uint8_t creg0:1;
 		uint8_t creg1:1;
 		uint8_t creg2:1;
-		uint8_t bit6:1;
-		uint8_t bit7:1;
+		uint8_t httpActionOk:1;
+		uint8_t httpActionError:1;
 		uint8_t bit8:1;
 	} bits;
 } _flags_gsmModuleUnsolicited;
@@ -239,7 +240,7 @@ static void pinGsmPwrkey_write(uint8_t value);
 static void pinGsmUartTx_transmit(uint8_t *gsmModule_command);
 static void pinGsmUartRx_receive(void);
 //Callback
-
+static void (*gsmModuleCallback)(_gsmModule_event evt, void* payload);
 
 
 
@@ -272,6 +273,13 @@ void gsmModule_init(UART_HandleTypeDef *huart)
 	//Variables
 	gsmModule_operator = __gsmModule_operator_unknown;
 }
+
+void gsmModule_setCallback(void (*cb)(_gsmModule_event, void*))
+{
+	gsmModuleCallback = cb;
+}
+
+
 
 void gsmModule_powerOn(void)
 {
@@ -430,6 +438,8 @@ void gsmModule_handler(void)
 		gsmRxPtrOut%=GSMRXDATA_LENGTH;
 	}
 
+	handle_unsolicitedMessages();
+
 	if(flags_gsmModule.bits.requestPowerOn) {
 		handle_requestPowerOn();
 	}
@@ -461,7 +471,6 @@ void gsmModule_handler(void)
 		}
 	}
 
-	handle_unsolicitedMessages();
 	gsmRxDataChunkLen = 0;
 }
 
@@ -475,6 +484,12 @@ static void handle_unsolicitedMessages(void)
 	}
 	else if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_unsolicited_creg2, gsmRxDataChunkLen)) {
 		flags_gsmModuleUnsolicited.bits.creg2 = 1;
+	}
+	else if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_httpaction1_200, gsmRxDataChunkLen)) {
+		flags_gsmModuleUnsolicited.bits.httpActionOk = 1;
+	}
+	else if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_httpaction1_err, gsmRxDataChunkLen)) {
+		flags_gsmModuleUnsolicited.bits.httpActionError = 1;
 	}
 }
 
@@ -912,7 +927,6 @@ static void handle_requestGpsInfo(void)
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_gps2dFix, gsmRxDataChunkLen) ||
 			   string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_gps3dFix, gsmRxDataChunkLen)) {
-				flags_gsmModule.bits.isGpsFixed = 1;
 
 				fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_send_atCgpsinf2);
 			}
@@ -950,7 +964,13 @@ static void handle_requestGpsInfo(void)
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_gpsInf2, gsmRxDataChunkLen)) {
+				flags_gsmModule.bits.isGpsFixed = 1;
 				flags_gsmModule.bits.requestGpsInfo = 0;
+
+				string_writeStr(gsmInfo, &gsmRxDataChunk[10]);
+				if(gsmModuleCallback != NULL) {
+					gsmModuleCallback(__gsmModuleEvent_okGpsInfo, (uint8_t *) gsmInfo);
+				}
 
 				fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_idle);
 			}
@@ -1120,6 +1140,7 @@ static void handle_requestGpsOff(void)
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_ok, gsmRxDataChunkLen)) {
 				flags_gsmModule.bits.requestGpsOff = 0;
+				flags_gsmModule.bits.isGpsOn = 0;
 
 				fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOff_idle);
 			}
@@ -1302,7 +1323,7 @@ static void handle_requestServerConnection(void)
 			if(fsmManager_isStateIn(&gsmModule_requestServerConnection_state)) {
 				fsmManager_stateIn(&gsmModule_requestServerConnection_state);
 
-				softTimer_start(&timeout, 500);
+				softTimer_start(&timeout, 1000);
 			}
 
 			if(softTimer_expired(&timeout)) {
@@ -1326,6 +1347,9 @@ static void handle_requestServerConnection(void)
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_cpinReady, gsmRxDataChunkLen)) {
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCband);
+			}
+			else if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_cme_error, gsmRxDataChunkLen)) {
+				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCfun1);
 			}
 			else if(softTimer_expired(&timeout)) {
 				fsmManager_gotoState(&gsmModule_requestServerConnection_state, __gsmModule_requestServerConnection_send_atCpin);
@@ -1990,13 +2014,13 @@ static void handle_requestServerDataSend(void)
 				softTimer_start(&timeout, 120*1000);
 			}
 
-			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_httpaction1_200, gsmRxDataChunkLen)) {
+			if(flags_gsmModuleUnsolicited.bits.httpActionOk == 1) {
 				flags_gsmModule.bits.isServerDataSent = 1;
 				flags_gsmModule.bits.requestServerDataSend = 0;
 
 				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_idle);
 			}
-			else if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_httpaction1_err, gsmRxDataChunkLen)) {
+			else if(flags_gsmModuleUnsolicited.bits.httpActionError == 1) {
 				fsmManager_gotoState(&gsmModule_requestServerDataSend_state, __gsmModule_requestServerDataSend_error);
 			}
 			else if(softTimer_expired(&timeout)) {
@@ -2195,15 +2219,15 @@ static void handle_requestServerDisconnection(void)
 
 
 		default:
-			if(fsmManager_isStateIn(&gsmModule_requestGpsOff_state)) {
-				fsmManager_stateIn(&gsmModule_requestGpsOff_state);
+			if(fsmManager_isStateIn(&gsmModule_requestServerDisconnection_state)) {
+				fsmManager_stateIn(&gsmModule_requestServerDisconnection_state);
 			}
 
 			flags_gsmModule.bits.requestServerDisconnection = 0;
-			fsmManager_gotoState(&gsmModule_requestGpsOff_state, __gsmModule_requestGpsOn_idle);
+			fsmManager_gotoState(&gsmModule_requestServerDisconnection_state, __gsmModule_requestServerDisconnection_idle);
 
-			if(fsmManager_isStateOut(&gsmModule_requestGpsOff_state)) {
-				fsmManager_stateOut(&gsmModule_requestGpsOff_state);
+			if(fsmManager_isStateOut(&gsmModule_requestServerDisconnection_state)) {
+				fsmManager_stateOut(&gsmModule_requestServerDisconnection_state);
 			}
 			break;
 	}

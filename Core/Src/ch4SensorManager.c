@@ -2,6 +2,7 @@
 #include "ch4SensorManager.h"
 #include "fsmManager.h"
 #include "utilities.h"
+#include <math.h>
 
 
 
@@ -122,7 +123,11 @@ void ch4Sensor_handler(void)
 				ch4_adcStart();
 			}
 
-			ch4Ppm = (float)ch4_adcGetValue();
+			ch4Ppm = (float) ch4_adcGetValue();
+			ch4Ppm = CH4_RL*(4095-ch4Ppm)/ch4Ppm;	//Gets Rs
+			ch4Ppm = ch4Ppm/CH4_R0;					//Gets ratio
+			ch4Ppm = pow(10, ((log10(ch4Ppm) - CH4_COEF_B)/CH4_COEF_C + CH4_COEF_A));
+
 			if(ch4SensorCallback != NULL) {
 				ch4SensorCallback(__ch4SensorEvent_okMeasuring, (float *) &ch4Ppm);
 			}

@@ -30,7 +30,7 @@ const uint8_t gsmModule_command_sapbr2[] 				= "AT+SAPBR=2,1\r\n";
 const uint8_t gsmModule_command_cops[] 					= "AT+COPS?\r\n";
 const uint8_t gsmModule_command_httpinit[]				= "AT+HTTPINIT\r\n";
 const uint8_t gsmModule_command_httppara_cid[] 			= "AT+HTTPPARA=\"CID\",1\r\n";
-const uint8_t gsmModule_command_httppara_url[] 			= "AT+HTTPPARA=\"URL\",\"34.176.199.238:80/index.php?";	//Se completa con datos de los sensores
+const uint8_t gsmModule_command_httppara_url[] 			= "AT+HTTPPARA=\"URL\",\"34.170.81.68:80/index.php?";	//Se completa con datos de los sensores
 const uint8_t gsmModule_command_httpaction1[] 			= "AT+HTTPACTION=1\r\n";
 const uint8_t gsmModule_command_sapbr0[] 				= "AT+SAPBR=0,1\r\n";
 const uint8_t gsmModule_command_httpterm[] 				= "AT+HTTPTERM\r\n";
@@ -40,7 +40,7 @@ const uint8_t gsmModule_command_[] = "AT+\r\n";
 
 const uint8_t gsmModule_response_ok[]					= "OK";
 const uint8_t gsmModule_response_error[]				= "ERROR";
-const uint8_t gsmModule_response_cme_error[]			= "CME: ERROR";
+const uint8_t gsmModule_response_cme_error[]			= "+CME ERROR:";
 const uint8_t gsmModule_response_normal_powerdown[]		= "NORMAL POWER DOWN";
 const uint8_t gsmModule_response_cpinNotReady[]			= "+CPIN: NOT READY";
 const uint8_t gsmModule_response_cpinNotInserted[]		= "+CPIN: NOT INSERTED";
@@ -52,7 +52,7 @@ const uint8_t gsmModule_response_creg1_2[]				= "+CREG: 1,2";
 const uint8_t gsmModule_response_cops_0[]				= "+COPS: 0";
 const uint8_t gsmModule_response_sapbr_1_1[]			= "+SAPBR: 1,1,";
 const uint8_t gsmModule_response_httpaction1_200[] 		= "+HTTPACTION: 1,200,";
-const uint8_t gsmModule_response_httpaction1_err[] 		= "+HTTPACTION: 1,";
+const uint8_t gsmModule_response_httpaction1_err[] 		= "+HTTPACTION:";
 const uint8_t gsmModule_response_gps2dFix[]				= "2D Fix";
 const uint8_t gsmModule_response_gps3dFix[]				= "3D Fix";
 const uint8_t gsmModule_response_gpsInf2[]				= "+CGPSINF: 2,";

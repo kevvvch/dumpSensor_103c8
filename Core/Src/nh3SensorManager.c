@@ -125,6 +125,10 @@ void nh3Sensor_handler(void)
 			}
 
 			nh3Ppm = (float)nh3_adcGetValue();
+			nh3Ppm = NH3_RL*(4095-nh3Ppm)/nh3Ppm;	//Gets Rs
+			nh3Ppm = nh3Ppm/NH3_R0;					//Gets ratio
+			nh3Ppm = pow(10, ((log10(nh3Ppm) - NH3_COEF_B)/NH3_COEF_C + NH3_COEF_A));
+
 			if(nh3SensorCallback != NULL) {
 				nh3SensorCallback(__nh3SensorEvent_okMeasuring, (float *) &nh3Ppm);
 			}

@@ -17,6 +17,13 @@ typedef enum {
 
 
 
+#define CH4_R0		(float) 1.58	//KOhm
+#define CH4_RL		(float) 22		//KOhm
+
+#define CH4_COEF_A	(float) 2.3
+#define CH4_COEF_B	(float) 0.49
+#define CH4_COEF_C	(float) -0.38
+
 
 void ch4Sensor_init(ADC_HandleTypeDef *hadc);
 void ch4Sensor_handler(void);

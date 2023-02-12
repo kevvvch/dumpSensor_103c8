@@ -2,6 +2,7 @@
 #include "nh3SensorManager.h"
 #include "fsmManager.h"
 #include "utilities.h"
+#include <math.h>
 
 
 

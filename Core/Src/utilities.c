@@ -555,6 +555,14 @@ uint8_t number_isBin(uint8_t *numBin)
 }
 
 
+void number_convertUint32_toArrayOfUint8(uint8_t *hex, uint32_t value)
+{
+    for(uint8_t i = 0; i < 8; i++) {
+        hex[i] = ((value >> (4 * (7 - i))) & 0xF) + '0';
+    }
+}
+
+
 
 
 

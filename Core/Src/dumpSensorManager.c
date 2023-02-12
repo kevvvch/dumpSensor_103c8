@@ -500,7 +500,7 @@ void dumpSensorManager_handler(void)
 
 				payloadDataToSend[0] = '\0';
 				string_appendString(payloadDataToSend, (uint8_t *) "id=");
-				ascii_convertNum(auxToSend, productId);
+				number_convertUint32_toArrayOfUint8(auxToSend, productId);
 				string_appendString(payloadDataToSend, auxToSend);
 				string_appendChar(payloadDataToSend, '&');
 
@@ -677,11 +677,11 @@ static void readNvm(void)
 static void writeNvm(void)
 {
 	//If it is needed to write to nvm, toggle the value of reg[NVM_FLAGS0].bits.bit0
-	if(reg[NVM_FLAGS0].bits.bit0 != 1) {
-		reg[NVM_FLAGS0].bits.bit0 = 1;
+	if(reg[NVM_FLAGS0].bits.bit0 != 0) {
+		reg[NVM_FLAGS0].bits.bit0 = 0;
 
-		reg[NVM_ID_HIGH].word = 0x4095;
-		reg[NVM_ID_LOW].word = 0x5621;
+		reg[NVM_ID_HIGH].word = 0xAE23;
+		reg[NVM_ID_LOW].word = 0xFA5B;
 
 		reg[NVM_COUNTER_DAY].word = 0;
 
@@ -693,3 +693,4 @@ static void writeNvm(void)
 		}
 	}
 }
+

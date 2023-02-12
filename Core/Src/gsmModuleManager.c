@@ -10,6 +10,7 @@
 /* DEFINES */
 #define GSMRXDATA_LENGTH		400
 #define GSMRXDATACHUNK_LENGTH	200
+#define COUNTGPSINFO_MAX		3
 
 /* PRIVATE VARIABLES */
 static UART_HandleTypeDef *gsmHuart;
@@ -19,6 +20,8 @@ static volatile uint32_t gsmRxPtrIn = 0;
 static volatile uint32_t gsmRxPtrInPrev = 0;
 static volatile uint32_t gsmRxPtrOut = 0;
 static uint32_t gsmRxDataChunkLen;
+
+static uint8_t countGpsInfo;
 
 static uint8_t dataToSend[200];
 static uint8_t gsmInfo[100];
@@ -959,10 +962,15 @@ static void handle_requestGpsInfo(void)
 		case __gsmModule_requestGpsInfo_send_atCgpsinf2:
 			if(fsmManager_isStateIn(&gsmModule_requestGpsInfo_state)) {
 				fsmManager_stateIn(&gsmModule_requestGpsInfo_state);
+
+				softTimer_start(&timeout, 10000);
 			}
 
-			pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsinf2);
-			fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_get_atCgpsinf2);
+			if(softTimer_expired(&timeout)) {
+				pinGsmUartTx_transmit((uint8_t *) gsmModule_command_cgpsinf2);
+				fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_get_atCgpsinf2);
+
+			}
 
 			if(fsmManager_isStateOut(&gsmModule_requestGpsInfo_state)) {
 				fsmManager_stateOut(&gsmModule_requestGpsInfo_state);
@@ -979,15 +987,22 @@ static void handle_requestGpsInfo(void)
 			}
 
 			if(string_containsWithinLength(gsmRxDataChunk, (uint8_t *) gsmModule_response_gpsInf2, gsmRxDataChunkLen)) {
-				flags_gsmModule.bits.isGpsFixed = 1;
-				flags_gsmModule.bits.requestGpsInfo = 0;
+				countGpsInfo++;
 
-				string_writeStr(gsmInfo, &gsmRxDataChunk[10]);
-				if(gsmModuleCallback != NULL) {
-					gsmModuleCallback(__gsmModuleEvent_okGpsInfo, (uint8_t *) gsmInfo);
+				if(countGpsInfo >= COUNTGPSINFO_MAX) {
+					flags_gsmModule.bits.isGpsFixed = 1;
+					flags_gsmModule.bits.requestGpsInfo = 0;
+
+					string_writeStr(gsmInfo, &gsmRxDataChunk[10]);
+					if(gsmModuleCallback != NULL) {
+						gsmModuleCallback(__gsmModuleEvent_okGpsInfo, (uint8_t *) gsmInfo);
+					}
+
+					fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_idle);
 				}
-
-				fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_idle);
+				else {
+					fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_send_atCgpsinf2);
+				}
 			}
 			else if(softTimer_expired(&timeout)) {
 				fsmManager_gotoState(&gsmModule_requestGpsInfo_state, __gsmModule_requestGpsInfo_send_atCgpsinf2);

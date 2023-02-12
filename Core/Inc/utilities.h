@@ -43,6 +43,9 @@ uint8_t number_isOct(uint8_t *numOct);
 uint8_t number_isDec(uint8_t *numDec);
 uint8_t number_isBin(uint8_t *numBin);
 
+void number_convertUint32_toArrayOfUint8(uint8_t *hex, uint32_t value);
+
+
 uint32_t arrayOfUint8_indexOf(uint8_t *array, uint8_t c, uint32_t arrayLen);
 uint32_t arrayOfUint8_split(uint8_t *array, uint8_t c, uint32_t arrayLen, uint8_t *arrayOut);
 

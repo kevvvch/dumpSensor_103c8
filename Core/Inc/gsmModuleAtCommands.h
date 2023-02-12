@@ -51,15 +51,16 @@ const uint8_t gsmModule_response_creg1_1[]				= "+CREG: 1,1";
 const uint8_t gsmModule_response_creg1_2[]				= "+CREG: 1,2";
 const uint8_t gsmModule_response_cops_0[]				= "+COPS: 0";
 const uint8_t gsmModule_response_sapbr_1_1[]			= "+SAPBR: 1,1,";
-const uint8_t gsmModule_response_httpaction1_200[] 		= "+HTTPACTION: 1,200,";
-const uint8_t gsmModule_response_httpaction1_err[] 		= "+HTTPACTION:";
+const uint8_t gsmModule_response_httpaction1_200[] 		= "1,200,";
+const uint8_t gsmModule_response_httpaction[] 			= "+HTTPACTION:";
 const uint8_t gsmModule_response_gps2dFix[]				= "2D Fix";
 const uint8_t gsmModule_response_gps3dFix[]				= "3D Fix";
 const uint8_t gsmModule_response_gpsInf2[]				= "+CGPSINF: 2,";
 
-const uint8_t gsmModule_unsolicited_creg0[]				= "+CREG: 0";
-const uint8_t gsmModule_unsolicited_creg1[]				= "+CREG: 1";
-const uint8_t gsmModule_unsolicited_creg2[]				= "+CREG: 2";
+const uint8_t gsmModule_unsolicited_creg[]				= "+CREG";
+const uint8_t gsmModule_unsolicited_creg0[]				= ": 0";
+const uint8_t gsmModule_unsolicited_creg1[]				= ": 1";
+const uint8_t gsmModule_unsolicited_creg2[]				= ": 2";
 
 
 

@@ -707,7 +707,6 @@ void arrayOfUint8_zeros(uint8_t *array, uint32_t arrayLen)
 	}
 }
 
-
 uint32_t ringBufferOfUint8_indexOf(uint8_t *rb, uint32_t ptrStart, uint32_t ptrEnd, uint8_t c, uint32_t rbLen)
 {
     uint32_t i = ptrStart;

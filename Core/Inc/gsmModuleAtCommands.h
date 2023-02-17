@@ -9,6 +9,7 @@ const uint8_t gsmModule_command_at[] 					= "AT\r\n";
 const uint8_t gsmModule_command_cpowd1[] 				= "AT+CPOWD=1\r\n";
 
 const uint8_t gsmModule_command_cgpspwr1[] 				= "AT+CGPSPWR=1\r\n";
+const uint8_t gsmModule_command_cgpspwr0[] 				= "AT+CGPSPWR=0\r\n";
 const uint8_t gsmModule_command_cgpsrst0[] 				= "AT+CGPSRST=0\r\n";
 const uint8_t gsmModule_command_cgpsrst1[] 				= "AT+CGPSRST=1\r\n";
 const uint8_t gsmModule_command_cgpsstatus[] 			= "AT+CGPSSTATUS?\r\n";

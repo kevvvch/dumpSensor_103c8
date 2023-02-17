@@ -1,12 +1,14 @@
 /* INCLUDES */
 #include "nh3SensorManager.h"
 #include "fsmManager.h"
+#include "softTimer.h"
 #include "utilities.h"
 #include <math.h>
 
 
 
-
+/* DEFINES */
+#define NH3_SENSOR_N_AVERAGES	10
 
 /* TYPEDEF */
 //FSM
@@ -55,6 +57,11 @@ typedef union {
 //ADC
 static ADC_HandleTypeDef *nh3Hadc;
 static float nh3Ppm;
+static float nh3Adc;
+static float nh3Rs;		//Rs
+static float nh3Ratio;	//Rs/Ro ratio
+static float nh3Slope;
+static float nh3Intersec;
 
 //FSM
 static fsm_t nh3Sensor_state;
@@ -62,6 +69,12 @@ static fsm_t nh3Sensor_state;
 //Flags
 static _flags_nh3Sensor flags_nh3Sensor;
 static _flags_nh3SensorError flags_nh3SensorError;
+static float nh3SensorPpmAverage;
+static uint32_t nAverages;
+
+//Timers
+static SoftTimer_t timer;
+
 
 
 /* FUNCTION PROTOTYPES */
@@ -123,18 +136,36 @@ void nh3Sensor_handler(void)
 				fsmManager_stateIn(&nh3Sensor_state);
 
 				nh3_adcStart();
+
+				nAverages = 0;
+				nh3SensorPpmAverage = 0;
+
+				softTimer_start(&timer, 50);
 			}
 
-			nh3Ppm = (float)nh3_adcGetValue();
-			nh3Ppm = NH3_RL*(4095-nh3Ppm)/nh3Ppm;	//Gets Rs
-			nh3Ppm = nh3Ppm/NH3_R0;					//Gets ratio
-			nh3Ppm = pow(10, ((log10(nh3Ppm) - NH3_COEF_B)/NH3_COEF_C + NH3_COEF_A));
+			if(nAverages < NH3_SENSOR_N_AVERAGES) {
+				if(softTimer_expired(&timer)) {
+					softTimer_start(&timer, 50);
 
-			if(nh3SensorCallback != NULL) {
-				nh3SensorCallback(__nh3SensorEvent_okMeasuring, (float *) &nh3Ppm);
+					nAverages++;
+
+					nh3SensorPpmAverage += (float)nh3_adcGetValue()/NH3_SENSOR_N_AVERAGES;
+				}
 			}
+			else {
+				nh3Adc = (float) nh3SensorPpmAverage;							//Gets adc value
+				nh3Rs = NH3_RL*(4095/nh3Adc-1);									//Gets Rs
+				nh3Ratio = nh3Rs/NH3_R0;										//Gets Rs/Ro ratio
+				nh3Slope = log10(NH3_P2_Y/NH3_P1_Y)/log10(NH3_P2_X/NH3_P1_X);	//Gets m
+				nh3Intersec = log10(NH3_P1_Y)-nh3Slope*log10(NH3_P1_X);			//Gets b
+				nh3Ppm = pow(10, (log10(nh3Ratio)-nh3Intersec)/nh3Slope);		//Gets ppm
 
-			fsmManager_gotoState(&nh3Sensor_state,__nh3Sensor_idle);
+				if(nh3SensorCallback != NULL) {
+					nh3SensorCallback(__nh3SensorEvent_okMeasuring, (float *) &nh3Ppm);
+				}
+
+				fsmManager_gotoState(&nh3Sensor_state,__nh3Sensor_idle);
+			}
 
 			if(fsmManager_isStateOut(&nh3Sensor_state)) {
 				fsmManager_stateOut(&nh3Sensor_state);

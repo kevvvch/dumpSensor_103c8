@@ -8,7 +8,7 @@
 
 
 /* DEFINES */
-
+#define US_SENSOR_N_AVERAGES	10
 
 /* TYPEDEF */
 //FSM
@@ -101,6 +101,8 @@ volatile static float echoTime;			//Echo pulse time [useg]
 //Variables
 static float usDistance;		//Distance between sensor and obstacle [mm]
 static float soundSpeed;		//Speed of sound [m/s]
+static float usDistanceAverage;	//Distance averaged [mm]
+static uint32_t nAverages;
 
 
 
@@ -164,6 +166,8 @@ void usSensor_handler(void)
 				//Clear variables
 				echoTime = 0;
 				usDistance = 0;
+				nAverages = 0;
+				usDistanceAverage = 0;
 				flags_usSensor.bits.isMeasuring = 0;
 			}
 
@@ -185,7 +189,7 @@ void usSensor_handler(void)
 			if(fsmManager_isStateIn(&usSensor_state)) {
 				fsmManager_stateIn(&usSensor_state);
 
-				softTimer_start(&timer, 1000);
+				softTimer_start(&timer, 3000);
 			}
 
 			if(softTimer_expired(&timer)) {
@@ -269,12 +273,21 @@ void usSensor_handler(void)
 			if(usDistance > US_SENSOR_DISTANCE_MAX_MILIMETER) {
 				fsmManager_gotoState(&usSensor_state,__usSensor_errorEchoOverflow);
 			} else {
-				//Informs to higher layer
-				if(usSensorCallback != NULL) {
-					usSensorCallback(__usSensorEvent_okMeasuring, (float *) &usDistance);
-				}
+				nAverages++;
 
-				fsmManager_gotoState(&usSensor_state,__usSensor_idle);
+				if(nAverages < US_SENSOR_N_AVERAGES) {
+					usDistanceAverage += usDistance/US_SENSOR_N_AVERAGES;
+
+					fsmManager_gotoState(&usSensor_state,__usSensor_pinUsTrigger_write);
+				}
+				else {
+					//Informs to higher layer
+					if(usSensorCallback != NULL) {
+						usSensorCallback(__usSensorEvent_okMeasuring, (float *) &usDistanceAverage);
+					}
+
+					fsmManager_gotoState(&usSensor_state,__usSensor_idle);
+				}
 			}
 
 

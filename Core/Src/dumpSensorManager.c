@@ -71,7 +71,7 @@ nvmReg reg[NVM_BACKUPREGISTERS_NUMBER];
 
 static uint32_t productId;
 
-static float distance;			//cm
+static float distance;			//mm
 static float nh3Concentration;	//ppm
 static float ch4Concentration;	//ppm
 static float temperature;		//Celcius
@@ -79,7 +79,7 @@ static float battery;			//Celcius
 static uint8_t gspLon[15];
 static uint8_t gspLat[15];
 
-static float distancePercent;
+//static float distancePercent;
 static float batteryPercent;
 static uint8_t payloadDataToSend[150];	//Data to send to  server
 static uint8_t auxToSend[50];	//Auxiliar variable
@@ -296,7 +296,7 @@ void dumpSensorManager_handler(void)
 			}
 
 			//Gets battery level percetange
-			battery = 0.50;
+			battery = 0.75;
 			batteryPercent = battery*100;
 			/*
 			if(batteryPercent < DUMPSTER_BATTERY_PERC_TRIG_NEG || ) {
@@ -305,6 +305,7 @@ void dumpSensorManager_handler(void)
 			*/
 
 			fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_measureTemperature);
+
 
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
 				fsmManager_stateOut(&dumpSensorFsmState);
@@ -338,11 +339,11 @@ void dumpSensorManager_handler(void)
 
 				usSensor_powerOn();
 				usSensor_measure(temperature);
+
+				softTimer_start(&timer, 10*1000);
 			}
 
 			if(flags_dumpSensor.bits.usSensor_measureDone == 1) {
-				//Calculates the percentage of the level of the dumpster
-				distancePercent = calculateDistancePercentage(distance);
 #if defined PROJECT_NOLOGIC
 				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_heatGasSensor);
 
@@ -367,6 +368,10 @@ void dumpSensorManager_handler(void)
 				}
 #endif
 			}
+			else if(softTimer_expired(&timer)) {
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_heatGasSensor);
+			}
+
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
 				fsmManager_stateOut(&dumpSensorFsmState);
 
@@ -381,7 +386,7 @@ void dumpSensorManager_handler(void)
 				ch4Sensor_powerOn();
 				nh3Sensor_powerOn();
 
-				softTimer_start(&timer, 6*1000);
+				softTimer_start(&timer, 20*1000);
 			}
 
 			if(softTimer_expired(&timer)) {
@@ -399,7 +404,7 @@ void dumpSensorManager_handler(void)
 
 				nh3Sensor_measure();
 
-				softTimer_start(&timer, 500);
+				softTimer_start(&timer, 10*1000);
 			}
 
 			if(flags_dumpSensor.bits.nh3Sensor_measureDone == 1) {
@@ -425,7 +430,7 @@ void dumpSensorManager_handler(void)
 
 				ch4Sensor_measure();
 
-				softTimer_start(&timer, 500);
+				softTimer_start(&timer, 10*1000);
 			}
 
 			if(flags_dumpSensor.bits.ch4Sensor_measureDone == 1) {
@@ -507,11 +512,13 @@ void dumpSensorManager_handler(void)
 				string_appendString(payloadDataToSend, (uint8_t *) "bat=");
 				ascii_convertNum(auxToSend, (uint32_t) batteryPercent);
 				string_appendString(payloadDataToSend, auxToSend);
-				string_appendChar(payloadDataToSend, '&');
 
-				string_appendString(payloadDataToSend, (uint8_t *) "level=");
-				ascii_convertNum(auxToSend, (uint32_t) distancePercent);
-				string_appendString(payloadDataToSend, auxToSend);
+				if(flags_dumpSensor.bits.usSensor_measureDone) {
+					string_appendChar(payloadDataToSend, '&');
+					string_appendString(payloadDataToSend, (uint8_t *) "level=");
+					ascii_convertNum(auxToSend, (uint32_t) distance);
+					string_appendString(payloadDataToSend, auxToSend);
+				}
 
 				if(flags_dumpSensor.bits.nh3Sensor_measureDone) {
 					string_appendChar(payloadDataToSend, '&');
@@ -612,7 +619,7 @@ void dumpSensorManager_handler(void)
 			}
 
 			//Enters standby mode
-			powerMode_enterStandbyMode(1*10);
+			powerMode_enterStandbyMode(1*30);
 
 			fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_idle);
 
@@ -677,8 +684,8 @@ static void readNvm(void)
 static void writeNvm(void)
 {
 	//If it is needed to write to nvm, toggle the value of reg[NVM_FLAGS0].bits.bit0
-	if(reg[NVM_FLAGS0].bits.bit0 != 0) {
-		reg[NVM_FLAGS0].bits.bit0 = 0;
+	if(reg[NVM_FLAGS0].bits.bit0 != 1) {
+		reg[NVM_FLAGS0].bits.bit0 = 1;
 
 		reg[NVM_ID_HIGH].word = 0xAE23;
 		reg[NVM_ID_LOW].word = 0xFA5B;
@@ -693,4 +700,3 @@ static void writeNvm(void)
 		}
 	}
 }
-

@@ -557,9 +557,15 @@ uint8_t number_isBin(uint8_t *numBin)
 
 void number_convertUint32_toArrayOfUint8(uint8_t *hex, uint32_t value)
 {
-    for(uint8_t i = 0; i < 8; i++) {
-        hex[i] = ((value >> (4 * (7 - i))) & 0xF) + '0';
-    }
+	static const char hex_lookup[] = "0123456789ABCDEF";
+
+	// Extract each 4-bit nibble of the number
+	for (int i = 7; i >= 0; i--) {
+		uint8_t nibble = (value >> (4 * i)) & 0xF;
+		hex[7 - i] = hex_lookup[nibble];
+	}
+
+	hex[8] = '\0';
 }
 
 

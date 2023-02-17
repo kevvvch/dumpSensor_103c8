@@ -1,11 +1,14 @@
 /* INCLUDES */
 #include "ch4SensorManager.h"
 #include "fsmManager.h"
+#include "softTimer.h"
 #include "utilities.h"
 #include <math.h>
 
 
 
+/* DEFINES */
+#define CH4_SENSOR_N_AVERAGES	10
 
 /* TYPEDEF */
 //FSM
@@ -54,6 +57,11 @@ typedef union {
 //ADC
 static ADC_HandleTypeDef *ch4Hadc;
 static float ch4Ppm;
+static float ch4Adc;
+static float ch4Rs;		//Rs
+static float ch4Ratio;	//Rs/Ro ratio
+static float ch4Slope;
+static float ch4Intersec;
 
 //FSM
 static fsm_t ch4Sensor_state;
@@ -61,6 +69,13 @@ static fsm_t ch4Sensor_state;
 //Flags
 static _flags_ch4Sensor flags_ch4Sensor;
 static _flags_ch4SensorError flags_ch4SensorError;
+static float ch4SensorPpmAverage;
+static uint32_t nAverages;
+
+//Timers
+static SoftTimer_t timer;
+
+
 
 /* FUNCTION PROTOTYPES */
 //Callback
@@ -121,18 +136,36 @@ void ch4Sensor_handler(void)
 				fsmManager_stateIn(&ch4Sensor_state);
 
 				ch4_adcStart();
+
+				nAverages = 0;
+				ch4SensorPpmAverage = 0;
+
+				softTimer_start(&timer, 50);
 			}
 
-			ch4Ppm = (float) ch4_adcGetValue();
-			ch4Ppm = CH4_RL*(4095-ch4Ppm)/ch4Ppm;	//Gets Rs
-			ch4Ppm = ch4Ppm/CH4_R0;					//Gets ratio
-			ch4Ppm = pow(10, ((log10(ch4Ppm) - CH4_COEF_B)/CH4_COEF_C + CH4_COEF_A));
+			if(nAverages < CH4_SENSOR_N_AVERAGES) {
+				if(softTimer_expired(&timer)) {
+					softTimer_start(&timer, 50);
 
-			if(ch4SensorCallback != NULL) {
-				ch4SensorCallback(__ch4SensorEvent_okMeasuring, (float *) &ch4Ppm);
+					nAverages++;
+
+					ch4SensorPpmAverage += (float)ch4_adcGetValue()/CH4_SENSOR_N_AVERAGES;
+				}
 			}
+			else {
+				ch4Adc = (float) ch4SensorPpmAverage;							//Gets adc value
+				ch4Rs = CH4_RL*(4095/ch4Adc-1);									//Gets Rs
+				ch4Ratio = ch4Rs/CH4_R0;										//Gets Rs/Ro ratio
+				ch4Slope = log10(CH4_P2_Y/CH4_P1_Y)/log10(CH4_P2_X/CH4_P1_X);	//Gets m
+				ch4Intersec = log10(CH4_P1_Y)-ch4Slope*log10(CH4_P1_X);			//Gets b
+				ch4Ppm = pow(10, (log10(ch4Ratio)-ch4Intersec)/ch4Slope);		//Gets ppm
 
-			fsmManager_gotoState(&ch4Sensor_state,__ch4Sensor_idle);
+				if(ch4SensorCallback != NULL) {
+					ch4SensorCallback(__ch4SensorEvent_okMeasuring, (float *) &ch4Ppm);
+				}
+
+				fsmManager_gotoState(&ch4Sensor_state,__ch4Sensor_idle);
+			}
 
 			if(fsmManager_isStateOut(&ch4Sensor_state)) {
 				fsmManager_stateOut(&ch4Sensor_state);

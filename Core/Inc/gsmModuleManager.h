@@ -29,7 +29,7 @@ void gsmModule_setCallback(void (*cb)(_gsmModule_event, void*));
 void gsmModule_pwrkeyOn(void);
 void gsmModule_pwrkeyOff(void);
 void gsmModule_gpsOn(void);
-void gsmModule_gpsInfo(void);
+void gsmModule_gpsInfo(uint8_t enable);
 void gsmModule_gpsOff(void);
 void gsmModule_serverConnect(void);
 void gsmModule_serverDataSend(uint8_t *data);

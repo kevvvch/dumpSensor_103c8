@@ -312,9 +312,9 @@ void gsmModule_gpsOn(void)
 	flags_gsmModule.bits.requestGpsOn = 1;
 }
 
-void gsmModule_gpsInfo(void)
+void gsmModule_gpsInfo(uint8_t enable)
 {
-	flags_gsmModule.bits.requestGpsInfo = 1;
+	flags_gsmModule.bits.requestGpsInfo = (enable ? 1 : 0);
 }
 
 void gsmModule_gpsOff(void)

@@ -386,7 +386,7 @@ void dumpSensorManager_handler(void)
 				ch4Sensor_powerOn();
 				nh3Sensor_powerOn();
 
-				softTimer_start(&timer, 20*1000);
+				softTimer_start(&timer, 8*1000);
 			}
 
 			if(softTimer_expired(&timer)) {
@@ -434,7 +434,8 @@ void dumpSensorManager_handler(void)
 			}
 
 			if(flags_dumpSensor.bits.ch4Sensor_measureDone == 1) {
-				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_getGps);
+				//fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_getGps);
+				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_sendPackage);
 			}
 			else if(softTimer_expired(&timer)) {
 				//If there is not a measurement within 500 mseg, stop trying to measure
@@ -455,17 +456,19 @@ void dumpSensorManager_handler(void)
 				fsmManager_stateIn(&dumpSensorFsmState);
 
 				gsmModule_gpsOn();
-				softTimer_start(&timer, 20*60*1000);
+				softTimer_start(&timer, 10*60*1000);
 			}
 
 			if(gsmModule_isGpsFixed()) {
 				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_turnOffGps);
 			}
 			else if(softTimer_expired(&timer)) {
+				gsmModule_gpsInfo(0);
+
 				fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_turnOffGps);
 			}
 			else if(gsmModule_isPowered() && gsmModule_isGpsOn() && !gsmModule_isGpsFixed() && !gsmModule_requestedGpsInfo()) {
-				gsmModule_gpsInfo();
+				gsmModule_gpsInfo(1);
 			}
 
 			if(fsmManager_isStateOut(&dumpSensorFsmState)) {
@@ -619,7 +622,7 @@ void dumpSensorManager_handler(void)
 			}
 
 			//Enters standby mode
-			powerMode_enterStandbyMode(1*30);
+			powerMode_enterStandbyMode(1*10);
 
 			fsmManager_gotoState(&dumpSensorFsmState, __dumpSensor_idle);
 
